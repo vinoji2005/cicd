@@ -17,23 +17,14 @@ pipeline {
         }
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE:${env.BUILD_ID} .'  // Tag image with BUILD_ID
+                sh 'docker build -t $DOCKER_IMAGE .'
             }
         }
         stage('Push Docker Image') {
             steps {
                 withDockerRegistry([credentialsId: 'dockerhub-credentials', url: '']) {
-                    sh 'docker push $DOCKER_IMAGE:${env.BUILD_ID}'  // Push tagged image
+                    sh 'docker push $DOCKER_IMAGE'
                 }
-            }
-        }
-        stage('Prepare Kubernetes YAML') {
-            steps {
-                // Replace placeholders in deployment.yaml dynamically
-                sh """
-                sed -i 's|\\$DOCKER_IMAGE|$DOCKER_IMAGE|' deployment.yaml
-                sed -i 's|\\$BUILD_NUMBER|${env.BUILD_ID}|' deployment.yaml
-                """
             }
         }
         stage('Deploy to Kubernetes') {
@@ -42,7 +33,7 @@ pipeline {
                     CONTROL_PLANE_IPS.split(' ').each { ip ->
                         sh """
                         scp -i $SSH_KEY_PATH deployment.yaml $SSH_USER@$ip:/home/$SSH_USER/
-                        ssh -i $SSH_KEY_PATH $SSH_USER@$ip 'kubectl apply -f /home/$SSH_USER/deployment.yaml'
+                        ssh -i $SSH_KEY_PATH $SSH_USER@$ip 'kubectl apply -f deployment.yaml'
                         """
                     }
                 }
