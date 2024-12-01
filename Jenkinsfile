@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        CONTROL_PLANE_IPS = '192.168.56.11 192.168.56.12 192.168.56.13'  // Control plane IPs
+        CONTROL_PLANE_IPS = '192.168.56.11'  // Control plane IPs
         SSH_USER = 'vagrant'
         SSH_KEY_PATH = '/var/lib/jenkins/.ssh/id_rsa'
         DOCKER_IMAGE = 'vinoji2005/train-schedule-app'
