@@ -45,7 +45,7 @@ spec:
     spec:
       containers:
       - name: train-schedule
-        image: $DOCKER_IMAGE_NAME:$BUILD_NUMBER  # Replace dynamically in pipeline
+        image: vinoji2005/train-schedule-app  # Replace dynamically in pipeline
         ports:
         - containerPort: 8080
         livenessProbe:
