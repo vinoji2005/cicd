@@ -1,18 +1,30 @@
+#namespace creation 
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: train-schedule
+  labels:
+    environment: production
+# Service Configuration
 kind: Service
 apiVersion: v1
 metadata:
   name: train-schedule-service
+  labels:
+    app: train-schedule
 spec:
-  type: NodePort
+  type: NodePort  # Change to LoadBalancer for production
   selector:
     app: train-schedule
   ports:
   - protocol: TCP
-    port: 8080
-    nodePort: 8080
+    port: 8080  # The port exposed by the service
+    targetPort: 8080  # The port the container listens on
+    nodePort: 30008  # Specify a stable NodePort (optional)
 
 ---
 
+# Deployment Configuration
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -20,7 +32,7 @@ metadata:
   labels:
     app: train-schedule
 spec:
-  replicas: 2
+  replicas: 3  # Increase for higher availability
   selector:
     matchLabels:
       app: train-schedule
@@ -33,7 +45,7 @@ spec:
     spec:
       containers:
       - name: train-schedule
-        image: $DOCKER_IMAGE_NAME:$BUILD_NUMBER
+        image: $DOCKER_IMAGE_NAME:$BUILD_NUMBER  # Replace dynamically in pipeline
         ports:
         - containerPort: 8080
         livenessProbe:
@@ -43,6 +55,17 @@ spec:
           initialDelaySeconds: 15
           timeoutSeconds: 1
           periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+          periodSeconds: 10
         resources:
           requests:
             cpu: 200m
+            memory: 512Mi  # Add memory requests
+          limits:
+            cpu: 500m
+            memory: 1Gi  # Add memory limits
