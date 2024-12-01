@@ -14,25 +14,29 @@ pipeline {
         }
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE .'
+                sh 'docker build -t "$DOCKER_IMAGE" .'
             }
         }
         stage('Push Docker Image') {
             steps {
                 withDockerRegistry([credentialsId: 'dockerhub-credentials', url: '']) {
-                    sh 'docker push $DOCKER_IMAGE'
+                    sh 'docker push "$DOCKER_IMAGE"'
                 }
             }
         }
         stage('Deploy to Kubernetes') {
             steps {
                 script {
+                    def parallelDeployments = [:]
                     CONTROL_PLANE_IPS.split(' ').each { ip ->
-                        sh """
-                        ssh -i $SSH_KEY_PATH $SSH_USER@$ip 'kubectl apply -f deployment.yaml'
-                        ssh -i $SSH_KEY_PATH $SSH_USER@$ip 'kubectl apply -f service.yaml'
-                        """
+                        parallelDeployments["Deploy to $ip"] = {
+                            sh """
+                            ssh -i "$SSH_KEY_PATH" "$SSH_USER@$ip" 'kubectl apply -f deployment.yaml'
+                            ssh -i "$SSH_KEY_PATH" "$SSH_USER@$ip" 'kubectl apply -f service.yaml'
+                            """
+                        }
                     }
+                    parallel parallelDeployments
                 }
             }
         }
@@ -43,4 +47,3 @@ pipeline {
         }
     }
 }
-
