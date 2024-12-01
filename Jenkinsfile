@@ -1,7 +1,12 @@
 pipeline {
-    agent any
+    agent {
+        label 'any'
+    }
+    options {
+        customWorkspace('/var/lib/jenkins/workspace/Devops')
+    }
     environment {
-        CONTROL_PLANE_IPS = '192.168.56.11 192.168.56.12 192.168.56.13'  // Control plane IPs
+        CONTROL_PLANE_IPS = '192.168.56.11 192.168.56.12 192.168.56.13'
         SSH_USER = 'vagrant'
         SSH_KEY_PATH = '/var/lib/jenkins/.ssh/id_rsa'
         DOCKER_IMAGE = 'vinoji2005/train-schedule-app'
@@ -27,16 +32,12 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    def parallelDeployments = [:]
                     CONTROL_PLANE_IPS.split(' ').each { ip ->
-                        parallelDeployments["Deploy to $ip"] = {
-                            sh """
-                            ssh -i "$SSH_KEY_PATH" "$SSH_USER@$ip" 'kubectl apply -f deployment.yaml'
-                            ssh -i "$SSH_KEY_PATH" "$SSH_USER@$ip" 'kubectl apply -f service.yaml'
-                            """
-                        }
+                        sh """
+                        ssh -i "$SSH_KEY_PATH" "$SSH_USER@$ip" 'kubectl apply -f deployment.yaml'
+                        ssh -i "$SSH_KEY_PATH" "$SSH_USER@$ip" 'kubectl apply -f service.yaml'
+                        """
                     }
-                    parallel parallelDeployments
                 }
             }
         }
