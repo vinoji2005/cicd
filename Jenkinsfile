@@ -32,8 +32,8 @@ pipeline {
                 script {
                     CONTROL_PLANE_IPS.split(' ').each { ip ->
                         sh """
+                        scp -i $SSH_KEY_PATH deployment.yaml $SSH_USER@$ip:/home/$SSH_USER/
                         ssh -i $SSH_KEY_PATH $SSH_USER@$ip 'kubectl apply -f deployment.yaml'
-                        ssh -i $SSH_KEY_PATH $SSH_USER@$ip 'kubectl apply -f service.yaml'
                         """
                     }
                 }
