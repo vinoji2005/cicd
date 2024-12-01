@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/vinoji2005/cicd-pipeline-train-schedule-autodeploy.git'
+                git branch: 'main', url: 'https://github.com/vinoji2005/cicd.git'
             }
         }
         stage('Build Docker Image') {
