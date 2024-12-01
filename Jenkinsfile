@@ -40,10 +40,8 @@ pipeline {
                 script {
                     sh """
                     echo "Preparing Kubernetes YAML with updated image name and tag"
-                    echo "Before Replacement:"
-                    cat deployment.yaml
-                    sed -i 's|$DOCKER_IMAGE_NAME|'"$DOCKER_IMAGE_NAME"'|' deployment.yaml
-                    sed -i 's|$BUILD_NUMBER|'"${env.BUILD_ID}"'|' deployment.yaml
+                    sed -i 's|\\\\$DOCKER_IMAGE_NAME|$DOCKER_IMAGE_NAME|' deployment.yaml
+                    sed -i 's|\\\\$BUILD_NUMBER|${env.BUILD_ID}|' deployment.yaml
                     echo "After Replacement:"
                     cat deployment.yaml
                     """
