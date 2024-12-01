@@ -1,18 +1,17 @@
 pipeline {
     agent any
     environment {
-        CONTROL_PLANE_IPS = '192.168.56.11'  // Control plane IPs
+        CONTROL_PLANE_IPS = '192.168.56.11'
         SSH_USER = 'vagrant'
         SSH_KEY_PATH = '/var/lib/jenkins/.ssh/id_rsa'
-        DOCKER_IMAGE_NAME = 'vinoji2005/train-schedule-app'  // Docker Hub image name
+        DOCKER_IMAGE_NAME = 'vinoji2005/train-schedule-app'
     }
     options {
-        ws('/var/lib/jenkins/workspace/Devops')  // Custom workspace
+        ws('/var/lib/jenkins/workspace/Devops')
     }
     stages {
         stage('Clone Repository') {
             steps {
-                // Clone the repository from GitHub
                 git branch: 'main', url: 'https://github.com/vinoji2005/cicd.git'
             }
         }
@@ -43,8 +42,8 @@ pipeline {
                     echo "Preparing Kubernetes YAML with updated image name and tag"
                     echo "Before Replacement:"
                     cat deployment.yaml
-                    sed -i 's|\\$DOCKER_IMAGE_NAME|'"$DOCKER_IMAGE_NAME"'|' deployment.yaml
-                    sed -i 's|\\$BUILD_NUMBER|'"${env.BUILD_ID}"'|' deployment.yaml
+                    sed -i 's|$DOCKER_IMAGE_NAME|'"$DOCKER_IMAGE_NAME"'|' deployment.yaml
+                    sed -i 's|$BUILD_NUMBER|'"${env.BUILD_ID}"'|' deployment.yaml
                     echo "After Replacement:"
                     cat deployment.yaml
                     """
@@ -67,7 +66,6 @@ pipeline {
     }
     post {
         always {
-            // Clean up the workspace to avoid conflicts
             cleanWs()
         }
     }
