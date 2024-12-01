@@ -1,17 +1,18 @@
 pipeline {
     agent any
     environment {
-        CONTROL_PLANE_IPS = '192.168.56.11'
+        CONTROL_PLANE_IPS = '192.168.56.11'  // Control plane IPs
         SSH_USER = 'vagrant'
         SSH_KEY_PATH = '/var/lib/jenkins/.ssh/id_rsa'
-        DOCKER_IMAGE = 'vinoji2005/train-schedule-app'
+        DOCKER_IMAGE_NAME = 'vinoji2005/train-schedule-app'  // Docker Hub image name
     }
     options {
-        ws('/var/lib/jenkins/workspace/Devops')
+        ws('/var/lib/jenkins/workspace/Devops')  // Custom workspace
     }
     stages {
         stage('Clone Repository') {
             steps {
+                // Clone the repository from GitHub
                 git branch: 'main', url: 'https://github.com/vinoji2005/cicd.git'
             }
         }
@@ -19,8 +20,8 @@ pipeline {
             steps {
                 script {
                     sh """
-                    echo "Building Docker Image: $DOCKER_IMAGE:${env.BUILD_ID}"
-                    docker build -t $DOCKER_IMAGE:${env.BUILD_ID} .
+                    echo "Building Docker Image: $DOCKER_IMAGE_NAME:${env.BUILD_ID}"
+                    docker build -t $DOCKER_IMAGE_NAME:${env.BUILD_ID} .
                     """
                 }
             }
@@ -29,8 +30,8 @@ pipeline {
             steps {
                 withDockerRegistry([credentialsId: 'dockerhub-credentials', url: '']) {
                     sh """
-                    echo "Pushing Docker Image to Docker Hub: $DOCKER_IMAGE:${env.BUILD_ID}"
-                    docker push $DOCKER_IMAGE:${env.BUILD_ID}
+                    echo "Pushing Docker Image to Docker Hub: $DOCKER_IMAGE_NAME:${env.BUILD_ID}"
+                    docker push $DOCKER_IMAGE_NAME:${env.BUILD_ID}
                     """
                 }
             }
@@ -40,8 +41,12 @@ pipeline {
                 script {
                     sh """
                     echo "Preparing Kubernetes YAML with updated image name and tag"
-                    sed -i 's|$DOCKER_IMAGE|'"$DOCKER_IMAGE"'|' deployment.yaml
-                    sed -i 's|$BUILD_NUMBER|'"${env.BUILD_ID}"'|' deployment.yaml
+                    echo "Before Replacement:"
+                    cat deployment.yaml
+                    sed -i 's|\\$DOCKER_IMAGE_NAME|'"$DOCKER_IMAGE_NAME"'|' deployment.yaml
+                    sed -i 's|\\$BUILD_NUMBER|'"${env.BUILD_ID}"'|' deployment.yaml
+                    echo "After Replacement:"
+                    cat deployment.yaml
                     """
                 }
             }
@@ -62,6 +67,7 @@ pipeline {
     }
     post {
         always {
+            // Clean up the workspace to avoid conflicts
             cleanWs()
         }
     }
